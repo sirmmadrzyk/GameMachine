@@ -7,13 +7,20 @@ import java.util.Scanner;
 public class GameMachineController {
     private GameMachine gameMachine;
     private UserWallet userWallet;
+    private boolean newUserLoopOn = true;
+    private boolean optionsLoopOn = true;
 
     public GameMachineController() {
         createGameMachine(collectGames());
-        handleNewUser();
-        start();
 
+        while (newUserLoopOn) {
 
+            handleNewUser();
+            while (optionsLoopOn) {
+                handleOptions();
+
+            }
+        }
     }
 
     private List<Game> collectGames() {
@@ -28,15 +35,20 @@ public class GameMachineController {
         return gamesList;
     }
 
-    private void handleNewUser(){
+    private void handleNewUser() {
 
-        try{
+        try {
             newUser();
-        }
-        catch(RuntimeException exception){
+        } catch (RuntimeException exception) {
 
             System.out.println("Niepoprawne dane... spróbuj jeszcze raz...");
-            newUser();
+            handleNewUser();
+
+        }
+
+        if (newUserLoopOn == false) {
+
+            return;
 
         }
 
@@ -44,6 +56,19 @@ public class GameMachineController {
 
     }
 
+    private void handleOptions() {
+
+        try {
+            options();
+        } catch (RuntimeException exception) {
+
+            System.out.println("Niepoprawne dane... spróbuj jeszcze raz...");
+            handleOptions();
+
+        }
+
+
+    }
 
     private void createGameMachine(List<Game> games) {
 
@@ -51,27 +76,35 @@ public class GameMachineController {
 
     }
 
-    public void newUser() {
+    private void newUser() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Witaj w naszym automacie do gier!!!");
-        System.out.println("Wpisz proszę swoje imię..\n");
+        System.out.println("Aby zakończyć wpisz: EXIT");
+        System.out.println("Wpisz proszę swoje imię..");
         String name = scanner.nextLine();
-        System.out.println("Określ prosze środki pieniężne jakimi dysponujesz (PLN)..\n");
+        if (name.equalsIgnoreCase("exit")) {
+            optionsLoopOn = false;
+            newUserLoopOn = false;
+            return;
+        }
+
+        System.out.println("Określ prosze środki pieniężne jakimi dysponujesz (PLN)..");
         int wallet = scanner.nextInt();
         this.userWallet = new UserWallet(name, wallet);
+        optionsLoopOn = true;
 
     }
 
-    private void emptyScannerBuffer(Scanner scanner){
+    private void emptyScannerBuffer(Scanner scanner) {
         System.out.println("Naciśnij dowolny klawisz....");
-       scanner.next();
+        scanner.next();
     }
 
-    private Game handleFindGame(){
+    private Game handleFindGame() {
         Game game;
-        try{
+        try {
             game = findGame();
-        }catch(GameMachineException e){
+        } catch (GameMachineException e) {
 
             System.out.println(e.getMessage());
             System.out.println("Spróbuj jeszcze raz");
@@ -79,38 +112,34 @@ public class GameMachineController {
 
         }
 
-        System.out.println("Znaleziono pozycje " + game.getTitle() + " cena: " + game.getPrice() +"PLN");
+        System.out.println("Znaleziono pozycje " + game.getTitle() + " cena: " + game.getPrice() + "PLN");
         System.out.println(game);
         return game;
 
     }
 
-    private void gameTransaction(Game game){
+    private void gameTransaction(Game game) {
 
         userWallet.setFunds(gameMachine.sellGame(game, userWallet.getFunds()));
         userWallet.addGame(game);
-
-
-
-
     }
 
-    private Game findGame(){
+    private Game findGame() {
 
-        Scanner scanner= new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in);
         System.out.println("Wpisz nazwę gry, która Cię interesuje...");
         String gameName = scanner.nextLine().toLowerCase();
         List<Game> foundGames = new LinkedList<>();
-        for(Game game: gameMachine.getGamesAvailable()){
-            if(game.getTitle().toLowerCase().contains(gameName))
+        for (Game game : gameMachine.getGamesAvailable()) {
+            if (game.getTitle().toLowerCase().contains(gameName))
                 foundGames.add(game);
         }
 
-        if(foundGames.size()==0){
+        if (foundGames.size() == 0) {
             throw new GameMachineException("Nie ma takiej gry...");
-        }else if(foundGames.size()>1){
+        } else if (foundGames.size() > 1) {
             throw new GameMachineException("Dostępne sa " + foundGames.size() + " gry, określ bardziej precyzyjnie...");
-        }else{
+        } else {
 
             return foundGames.get(0);
 
@@ -120,63 +149,74 @@ public class GameMachineController {
     }
 
 
-    public void start() {
-        Scanner scanner = new Scanner(System.in);
-        boolean running = true;
-        while (running) {
+    private int printOptions(Scanner scanner) {
 
-            System.out.println(userWallet.getName() +", wybierz jedną z dostępnych opcji:");
-            System.out.println("1 -> pokaż wszystkie gry");
-            System.out.println("2 -> pokaż tylko gry dostępne do kupienia ");
-            System.out.println("3 -> wpisz tytuł, gry którą chcesz kupić ");
-            System.out.println("4 -> statystyki użytkownika ");
-            System.out.println("9 -> zakończ");
-            int option = scanner.nextInt();
-            switch (option) {
-                case 1:
-                    System.out.println("Wszystkie gry: ");
-                    gameMachine.printAllGames();
-                    break;
-                case 2:
-                    System.out.println("Gry dostępne do kupienia: ");
-                    gameMachine.printAvailableGames();
-                    break;
-                case 3:
-                    Game chosenGame = handleFindGame();
-                    if(userWallet.getFunds() < chosenGame.getPrice()){
-                        System.out.println("Nie masz wystarczająco środków aby zakupić tę pozycje...");
-                        System.out.println("Idź do pracy... znajdź sponsora..");
-                        break;
-                    }
-                    System.out.println("Aby potwierdzić zakup naciśnij Y");
-                    System.out.println("Aby anulować naciśnij dowolny klawisz...");
-                    Scanner scannerPurchase = new Scanner(System.in);
-                    String answer = scannerPurchase.nextLine();
-                    if(answer.equalsIgnoreCase("y")){
+        System.out.println(userWallet.getName() + ", wybierz jedną z dostępnych opcji:");
+        System.out.println("1 -> pokaż wszystkie gry");
+        System.out.println("2 -> pokaż tylko gry dostępne do kupienia ");
+        System.out.println("3 -> wpisz tytuł, gry którą chcesz kupić ");
+        System.out.println("4 -> statystyki użytkownika ");
+        System.out.println("9 -> zakończ");
+        return scanner.nextInt();
+    }
 
-                        gameTransaction(chosenGame);
+    private boolean isEnoughFunds(Game chosenGame){
+        if (userWallet.getFunds() < chosenGame.getPrice()) {
+            System.out.println("Nie masz wystarczająco środków aby zakupić tę pozycje...");
+            System.out.println("Idź do pracy... znajdź sponsora..");
+            return false;
+        }
+        return true;
+    }
 
-                    }else{
-                        System.out.println("Transakcja anulowana...");
-                    }
+    private boolean makeDecision(Game chosenGame){
+        Scanner scannerPurchase = new Scanner(System.in);
+        System.out.println("Aby potwierdzić zakup naciśnij Y");
+        System.out.println("Aby anulować naciśnij dowolny klawisz...");
+        String answer = scannerPurchase.nextLine();
+        if (answer.equalsIgnoreCase("y")) {
+            gameTransaction(chosenGame);
+            return true;
 
-
-                    break;
-                case 4:
-                    System.out.println(userWallet);
-                    break;
-                case 9:
-                    running = false;
-                    break;
-
-
-            }
-
-            emptyScannerBuffer(scanner);
-
+        } else {
+            System.out.println("Transakcja anulowana...");
+            return false;
         }
 
+    }
 
+    private void executeOptions(int option) {
+        switch (option) {
+            case 1:
+                System.out.println("Wszystkie gry: ");
+                gameMachine.printAllGames();
+                break;
+            case 2:
+                System.out.println("Gry dostępne do kupienia: ");
+                gameMachine.printAvailableGames();
+                break;
+            case 3:
+                Game chosenGame = handleFindGame();
+                if(isEnoughFunds(chosenGame)){
+                   makeDecision(chosenGame);
+                }
+                break;
+            case 4:
+                System.out.println(userWallet);
+                break;
+            case 9:
+                optionsLoopOn = false;
+                break;
+
+
+        }
+    }
+
+    private void options() {
+        Scanner scanner = new Scanner(System.in);
+        int option = printOptions(scanner);
+        executeOptions(option);
+        emptyScannerBuffer(scanner);
     }
 
     public GameMachine getGameMachine() {

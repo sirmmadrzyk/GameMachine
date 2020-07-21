@@ -27,8 +27,6 @@ public class GameMachine {
         }
 
         if( (gamesAvailable.contains(game)) && money >= game.getPrice() ){
-
-
             gamesAvailable.remove(game);
             gamesSold.add(game);
             this.money += game.getPrice();
