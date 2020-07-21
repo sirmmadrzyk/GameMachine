@@ -29,8 +29,6 @@ public class Demo {
     public static void main(String[] args) {
 
         GameMachineController game = new GameMachineController();
-        System.out.println(game.getGameMachine());
-        System.out.println(game.getUserWallet());
 
     }
 }

@@ -154,8 +154,9 @@ public class GameMachineController {
         System.out.println(userWallet.getName() + ", wybierz jedną z dostępnych opcji:");
         System.out.println("1 -> pokaż wszystkie gry");
         System.out.println("2 -> pokaż tylko gry dostępne do kupienia ");
-        System.out.println("3 -> wpisz tytuł, gry którą chcesz kupić ");
+        System.out.println("3 -> wpisz tytuł gry, którą chcesz kupić ");
         System.out.println("4 -> statystyki użytkownika ");
+        System.out.println("5 -> statystyki automatu do gier ");
         System.out.println("9 -> zakończ");
         return scanner.nextInt();
     }
@@ -204,12 +205,26 @@ public class GameMachineController {
             case 4:
                 System.out.println(userWallet);
                 break;
+            case 5:
+                printGameMachineStatus();
+                break;
             case 9:
                 optionsLoopOn = false;
                 break;
 
 
         }
+    }
+
+    private void printGameMachineStatus(){
+        int money = gameMachine.getMoney();
+        int numberOfSoldGames = gameMachine.getGamesSold().size();
+        int numberOfAvailableGames = gameMachine.getGamesAvailable().size();
+
+        System.out.println("Sprzedano już " + numberOfSoldGames + " grę/gier/gry, za łączną kwotę " + money + "PLN" );
+        System.out.println("Dostępnych jest jeszcze " + numberOfAvailableGames + " pozycji. ");
+        System.out.println("Zapraszamy Twój automacik...");
+
     }
 
     private void options() {

@@ -8,6 +8,13 @@ public class GameMachine {
     private List<Game> gamesSold = new LinkedList<>();
     private int money = 0;
 
+    public int getMoney() {
+        return money;
+    }
+
+    public List<Game> getGamesSold() {
+        return gamesSold;
+    }
 
     public GameMachine(List<Game> gamesAll) {
         this.gamesAvailable = gamesAll;
